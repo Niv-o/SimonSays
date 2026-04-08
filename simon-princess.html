@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>סיימון אומר — נסיכות דיסני</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #fdf0ff;
+      min-height: 100vh;
+      font-family: 'Fredoka', sans-serif;
+      color: #2a1a3e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+      background-image:
+        radial-gradient(circle, rgba(180,100,255,0.06) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255,150,200,0.05) 1px, transparent 1px);
+      background-size: 30px 30px, 20px 20px;
+      background-position: 0 0, 10px 10px;
+    }
+
+    /* ── Header ── */
+    header {
+      width: 100%;
+      text-align: center;
+      padding: 18px 20px 16px;
+      background: linear-gradient(135deg, #c84bff 0%, #ff6eb4 60%, #ffb347 100%);
+      box-shadow: 0 4px 20px rgba(200,75,255,0.35);
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.15) 14%, transparent 14%);
+      background-size: 22px 22px;
+      pointer-events: none;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 6vw, 2.4rem);
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      position: relative;
+      z-index: 1;
+      letter-spacing: 0.03em;
+    }
+    header .subtitle {
+      font-size: clamp(0.85rem, 3vw, 1.1rem);
+      color: rgba(255,255,255,0.88);
+      font-weight: 400;
+      position: relative;
+      z-index: 1;
+      margin-top: 2px;
+    }
+
+    /* ── Score bar ── */
+    .score-bar {
+      display: flex;
+      justify-content: center;
+      gap: clamp(16px, 5vw, 48px);
+      padding: 14px 20px;
+      width: 100%;
+      max-width: 520px;
+    }
+    .score-item {
+      text-align: center;
+    }
+    .score-label {
+      font-size: 0.8rem;
+      color: #8860a0;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+    .score-value {
+      font-size: clamp(1.5rem, 5vw, 2rem);
+      font-weight: 700;
+      color: #6a0dad;
+      line-height: 1;
+    }
+
+    /* ── Status message ── */
+    .status {
+      font-size: clamp(1rem, 4vw, 1.3rem);
+      font-weight: 600;
+      color: #7a3da0;
+      min-height: 2em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 0 20px;
+      transition: opacity 0.3s;
+    }
+
+    /* ── Princess grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(10px, 3vw, 18px);
+      padding: clamp(10px, 3vw, 20px);
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .tile {
+      aspect-ratio: 1;
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 4px solid transparent;
+      transition: transform 0.1s, box-shadow 0.15s, filter 0.15s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+      position: relative;
+      overflow: hidden;
+    }
+    .tile::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.18);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .tile:active::before { opacity: 1; }
+
+    .tile .princess-img {
+      width: 78%;
+      height: 78%;
+      object-fit: contain;
+      object-position: center;
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.22));
+      transition: transform 0.15s;
+      pointer-events: none;
+      user-select: none;
+    }
+    .tile .name {
+      font-size: clamp(1rem, 3.8vw, 1.5rem);
+      font-weight: 700;
+      margin-top: 6px;
+      color: rgba(0,0,0,0.65);
+      letter-spacing: 0.02em;
+    }
+
+    /* Princess colors */
+    .tile-0 { background: linear-gradient(145deg, #c8e8f8, #a8d8f0); box-shadow: 0 6px 20px rgba(100,180,240,0.4); }
+    .tile-1 { background: linear-gradient(145deg, #ffc07a, #f4a261); box-shadow: 0 6px 20px rgba(244,162,97,0.45); }
+    .tile-2 { background: linear-gradient(145deg, #d8ccf0, #c3b1e1); box-shadow: 0 6px 20px rgba(160,130,210,0.4); }
+    .tile-3 { background: linear-gradient(145deg, #a0dfc0, #80cfa9); box-shadow: 0 6px 20px rgba(100,190,150,0.4); }
+
+    /* Lit state */
+    .tile.lit {
+      transform: scale(1.05);
+      filter: brightness(1.3) saturate(1.4);
+    }
+    .tile-0.lit { box-shadow: 0 0 0 5px #a8d8f0, 0 0 40px 10px rgba(100,180,240,0.7); border-color: #5bbfee; }
+    .tile-1.lit { box-shadow: 0 0 0 5px #f4a261, 0 0 40px 10px rgba(244,162,97,0.7); border-color: #e08030; }
+    .tile-2.lit { box-shadow: 0 0 0 5px #c3b1e1, 0 0 40px 10px rgba(160,130,210,0.7); border-color: #9f80cc; }
+    .tile-3.lit { box-shadow: 0 0 0 5px #80cfa9, 0 0 40px 10px rgba(100,190,150,0.7); border-color: #50b880; }
+
+    .tile.lit .princess-img { transform: scale(1.1); }
+
+    /* Disabled (not player's turn) */
+    .tile.dim { cursor: default; filter: brightness(0.7) saturate(0.5); }
+
+    /* Shake on wrong */
+    @keyframes shake {
+      0%   { transform: translateX(0); }
+      15%  { transform: translateX(-10px) rotate(-2deg); }
+      30%  { transform: translateX(10px) rotate(2deg); }
+      45%  { transform: translateX(-8px) rotate(-1deg); }
+      60%  { transform: translateX(8px) rotate(1deg); }
+      75%  { transform: translateX(-4px); }
+      90%  { transform: translateX(4px); }
+      100% { transform: translateX(0); }
+    }
+    .tile.shake { animation: shake 0.55s ease; }
+
+    /* ── Buttons ── */
+    .btn-row {
+      padding: 8px 20px 24px;
+      display: flex;
+      justify-content: center;
+    }
+    .btn-start {
+      font-family: 'Fredoka', sans-serif;
+      font-size: clamp(1.1rem, 4vw, 1.5rem);
+      font-weight: 700;
+      padding: 14px 48px;
+      border: none;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #c84bff 0%, #ff6eb4 100%);
+      color: #fff;
+      cursor: pointer;
+      box-shadow: 0 5px 20px rgba(200,75,255,0.45);
+      transition: transform 0.15s, box-shadow 0.15s;
+      letter-spacing: 0.04em;
+    }
+    .btn-start:hover { transform: scale(1.05); box-shadow: 0 8px 28px rgba(200,75,255,0.55); }
+    .btn-start:active { transform: scale(0.97); }
+    .btn-start:disabled { opacity: 0.4; cursor: default; transform: none; }
+
+    /* ── New record banner ── */
+    .record-banner {
+      display: none;
+      font-size: clamp(1rem, 4vw, 1.3rem);
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(90deg, #ffb347, #ff6eb4);
+      padding: 8px 28px;
+      border-radius: 50px;
+      box-shadow: 0 4px 16px rgba(255,120,70,0.45);
+      animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      margin-bottom: 4px;
+    }
+    .record-banner.visible { display: inline-block; }
+    @keyframes pop-in {
+      from { transform: scale(0.5); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    /* ── Sparkle start screen decorations ── */
+    .sparkles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .sparkle {
+      position: absolute;
+      font-size: 1.4rem;
+      animation: float-sparkle var(--dur, 4s) ease-in-out infinite var(--delay, 0s);
+      opacity: 0.5;
+    }
+    @keyframes float-sparkle {
+      0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+      50%       { transform: translateY(-18px) rotate(15deg); opacity: 0.7; }
+    }
+
+    /* ── Confetti ── */
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* ── Overlay (start screen) ── */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(253,240,255,0.92);
+      backdrop-filter: blur(4px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      gap: 18px;
+      text-align: center;
+      padding: 20px;
+      transition: opacity 0.4s;
+    }
+    .overlay.hidden { opacity: 0; pointer-events: none; }
+    .overlay-title {
+      font-size: clamp(2rem, 8vw, 3.5rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, #c84bff, #ff6eb4, #ffb347);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+    }
+    .overlay-sub {
+      font-size: clamp(1rem, 3.5vw, 1.4rem);
+      color: #7a4a9a;
+      font-weight: 400;
+    }
+    .overlay-emojis { font-size: clamp(2rem, 8vw, 3rem); letter-spacing: 12px; }
+    .high-score-display {
+      font-size: clamp(0.9rem, 3vw, 1.1rem);
+      color: #9060b0;
+    }
+    .high-score-display span {
+      font-weight: 700;
+      color: #c84bff;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Floating sparkles background -->
+<div class="sparkles" id="sparkles"></div>
+
+<!-- Confetti canvas -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- Start overlay -->
+<div class="overlay" id="overlay">
+  <div class="overlay-emojis">👸🏼🌊❄️🧜‍♀️</div>
+  <div class="overlay-title">סיימון אומר<br>נסיכות דיסני</div>
+  <div class="overlay-sub">זכרי את הסדר ולחצי על הנסיכות הנכונה!</div>
+  <div class="high-score-display" id="hs-display">שיא: <span id="hs-num">0</span></div>
+  <button class="btn-start" id="overlay-btn" onclick="startGame()">התחל ✨</button>
+</div>
+
+<!-- Header -->
+<header>
+  <h1>✨ סיימון אומר ✨</h1>
+  <div class="subtitle">נסיכות דיסני</div>
+</header>
+
+<!-- Score bar -->
+<div class="score-bar">
+  <div class="score-item">
+    <div class="score-label">סיבוב</div>
+    <div class="score-value" id="round-display">1</div>
+  </div>
+  <div class="score-item">
+    <div class="score-label">שיא</div>
+    <div class="score-value" id="best-display">0</div>
+  </div>
+</div>
+
+<!-- Record banner -->
+<div style="text-align:center; min-height:40px; display:flex; align-items:center; justify-content:center;">
+  <div class="record-banner" id="record-banner">🏆 שיא חדש! 🏆</div>
+</div>
+
+<!-- Status -->
+<div class="status" id="status">לחצי על "התחל" כדי לשחק!</div>
+
+<!-- Princess tiles -->
+<div class="grid" id="grid">
+  <div class="tile tile-0 dim" id="tile-0" onclick="handleTap(0)">
+    <img class="princess-img" src="ELZA.png" alt="אלסה" draggable="false">
+    <span class="name">אלסה</span>
+  </div>
+  <div class="tile tile-1 dim" id="tile-1" onclick="handleTap(1)">
+    <img class="princess-img" src="MOANA.png" alt="מואנה" draggable="false">
+    <span class="name">מואנה</span>
+  </div>
+  <div class="tile tile-2 dim" id="tile-2" onclick="handleTap(2)">
+    <img class="princess-img" src="CINDERELLA.png" alt="סינדרלה" draggable="false">
+    <span class="name">סינדרלה</span>
+  </div>
+  <div class="tile tile-3 dim" id="tile-3" onclick="handleTap(3)">
+    <img class="princess-img" src="ARIEL.png" alt="אריאל" draggable="false">
+    <span class="name">אריאל</span>
+  </div>
+</div>
+
+<!-- Action button -->
+<div class="btn-row">
+  <button class="btn-start" id="main-btn" onclick="startGame()" disabled>התחל ✨</button>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  Audio (Web Audio API)
+// ══════════════════════════════════════════
+let AC;
+function getAC() {
+  if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+  if (AC.state === 'suspended') AC.resume();
+  return AC;
+}
+
+// Each princess has a distinct chord-like tone
+const PRINCESS_FREQS = [
+  [523, 659],   // Elsa     — C5 + E5 (ice shimmer)
+  [440, 554],   // Moana    — A4 + C#5 (warm wave)
+  [392, 494],   // Cinderella — G4 + B4 (gentle bell)
+  [349, 440],   // Ariel    — F4 + A4 (sea sparkle)
+];
+
+function playTone(i, dur = 0.35) {
+  const ac = getAC();
+  PRINCESS_FREQS[i].forEach((freq, idx) => {
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.connect(gain);
+    gain.connect(ac.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, ac.currentTime);
+    gain.gain.setValueAtTime(0.22, ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+    osc.start(ac.currentTime);
+    osc.stop(ac.currentTime + dur + 0.02);
+  });
+}
+
+function playWrong() {
+  const ac = getAC();
+  const osc = ac.createOscillator();
+  const gain = ac.createGain();
+  osc.connect(gain); gain.connect(ac.destination);
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(180, ac.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(80, ac.currentTime + 0.4);
+  gain.gain.setValueAtTime(0.18, ac.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.4);
+  osc.start(ac.currentTime);
+  osc.stop(ac.currentTime + 0.45);
+}
+
+function playCelebrate() {
+  // Ascending cheerful fanfare
+  [[0,523],[100,659],[200,784],[320,1047]].forEach(([ms, freq]) => {
+    setTimeout(() => {
+      const ac = getAC();
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.connect(gain); gain.connect(ac.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ac.currentTime);
+      gain.gain.setValueAtTime(0.22, ac.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.22);
+      osc.start(ac.currentTime); osc.stop(ac.currentTime + 0.24);
+    }, ms);
+  });
+}
+
+// ══════════════════════════════════════════
+//  Confetti
+// ══════════════════════════════════════════
+const confCanvas = document.getElementById('confetti-canvas');
+const confCtx = confCanvas.getContext('2d');
+let confParticles = [];
+let confAF = null;
+
+function resizeConf() {
+  confCanvas.width = window.innerWidth;
+  confCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeConf);
+resizeConf();
+
+const CONF_COLORS = ['#c84bff','#ff6eb4','#ffb347','#a8d8f0','#80cfa9','#c3b1e1','#f4a261','#fff'];
+
+function spawnConfetti(cx, cy) {
+  for (let i = 0; i < 55; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 4 + Math.random() * 8;
+    confParticles.push({
+      x: cx || window.innerWidth / 2,
+      y: cy || window.innerHeight * 0.4,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed - 4,
+      rot: Math.random() * 360,
+      rotV: (Math.random() - 0.5) * 12,
+      w: 8 + Math.random() * 8,
+      h: 5 + Math.random() * 5,
+      color: CONF_COLORS[Math.floor(Math.random() * CONF_COLORS.length)],
+      life: 1,
+      decay: 0.012 + Math.random() * 0.01,
+    });
+  }
+  if (!confAF) animateConf();
+}
+
+function animateConf() {
+  confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+  confParticles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.28; // gravity
+    p.vx *= 0.99;
+    p.rot += p.rotV;
+    p.life -= p.decay;
+    confCtx.save();
+    confCtx.globalAlpha = Math.max(0, p.life);
+    confCtx.translate(p.x, p.y);
+    confCtx.rotate(p.rot * Math.PI / 180);
+    confCtx.fillStyle = p.color;
+    confCtx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+    confCtx.restore();
+  });
+  confParticles = confParticles.filter(p => p.life > 0);
+  if (confParticles.length > 0) {
+    confAF = requestAnimationFrame(animateConf);
+  } else {
+    confAF = null;
+    confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+  }
+}
+
+// ══════════════════════════════════════════
+//  Sparkle background
+// ══════════════════════════════════════════
+(function buildSparkles() {
+  const container = document.getElementById('sparkles');
+  const items = ['✨','⭐','🌟','💫','✨','⭐','💎','🌸'];
+  for (let i = 0; i < 14; i++) {
+    const el = document.createElement('div');
+    el.className = 'sparkle';
+    el.textContent = items[i % items.length];
+    el.style.left = (Math.random() * 95) + '%';
+    el.style.top  = (Math.random() * 90) + '%';
+    el.style.setProperty('--dur', (3 + Math.random() * 4) + 's');
+    el.style.setProperty('--delay', (Math.random() * 3) + 's');
+    container.appendChild(el);
+  }
+})();
+
+// ══════════════════════════════════════════
+//  Game State
+// ══════════════════════════════════════════
+let sequence = [];
+let playerIndex = 0;
+let round = 0;
+let bestScore = parseInt(localStorage.getItem('simon-princess-best') || '0');
+let accepting = false;  // true when it's the player's turn
+let busy = false;       // true while showing sequence or animating
+
+updateBestDisplay();
+
+function updateBestDisplay() {
+  document.getElementById('best-display').textContent = bestScore;
+  document.getElementById('hs-num').textContent = bestScore;
+}
+
+// ══════════════════════════════════════════
+//  Core game functions
+// ══════════════════════════════════════════
+function startGame() {
+  getAC(); // unlock audio on first interaction
+  hideOverlay();
+  sequence = [];
+  playerIndex = 0;
+  round = 0;
+  document.getElementById('record-banner').classList.remove('visible');
+  document.getElementById('main-btn').disabled = true;
+  nextRound();
+}
+
+function nextRound() {
+  round++;
+  playerIndex = 0;
+  accepting = false;
+  busy = true;
+  document.getElementById('round-display').textContent = round;
+  setDim(true);
+  setStatus('👀 תראי בעיון…');
+
+  // Add random tile to sequence
+  sequence.push(Math.floor(Math.random() * 4));
+
+  // Delay then show
+  setTimeout(() => showSequence(), 600);
+}
+
+async function showSequence() {
+  // Speed: base 700ms, -10ms per round after round 5, minimum 350ms
+  const litDur  = Math.max(350, 700 - Math.max(0, round - 5) * 18);
+  const gapDur  = Math.max(180, 350 - Math.max(0, round - 5) * 9);
+
+  for (let i = 0; i < sequence.length; i++) {
+    await delay(gapDur);
+    await lightUp(sequence[i], litDur);
+  }
+
+  await delay(400);
+  busy = false;
+  accepting = true;
+  setDim(false);
+  setStatus('🎯 תורך! חזרי על הסדר');
+}
+
+function lightUp(i, dur) {
+  return new Promise(resolve => {
+    const tile = document.getElementById('tile-' + i);
+    tile.classList.add('lit');
+    playTone(i, dur / 1000);
+    setTimeout(() => {
+      tile.classList.remove('lit');
+      resolve();
+    }, dur);
+  });
+}
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function handleTap(i) {
+  if (!accepting || busy) return;
+  getAC();
+
+  const correct = sequence[playerIndex];
+
+  if (i === correct) {
+    // Correct tap
+    lightUp(i, 300);
+    playerIndex++;
+
+    if (playerIndex === sequence.length) {
+      // Completed the sequence!
+      accepting = false;
+      busy = true;
+
+      setTimeout(() => {
+        celebrate();
+        setTimeout(() => {
+          nextRound();
+        }, 1400);
+      }, 300);
+    }
+  } else {
+    // Wrong tap — gentle retry
+    accepting = false;
+    busy = true;
+    wrongTap(i);
+  }
+}
+
+function celebrate() {
+  playCelebrate();
+  spawnConfetti();
+
+  // Check high score
+  const completed = round - 1; // rounds successfully completed
+  // Actually current round IS the one just completed
+  if (round > bestScore) {
+    bestScore = round;
+    localStorage.setItem('simon-princess-best', bestScore);
+    updateBestDisplay();
+    document.getElementById('record-banner').classList.add('visible');
+  }
+
+  setStatus('🎉 כל הכבוד! ✨');
+}
+
+function wrongTap(wrongI) {
+  playWrong();
+  // Shake all tiles briefly
+  [0,1,2,3].forEach(i => {
+    const t = document.getElementById('tile-' + i);
+    t.classList.add('shake');
+    setTimeout(() => t.classList.remove('shake'), 600);
+  });
+
+  setStatus('😅 אופס! נסי שוב…');
+
+  setTimeout(() => {
+    // Replay the same sequence
+    playerIndex = 0;
+    busy = true;
+    accepting = false;
+    setDim(true);
+    setStatus('👀 תראי שוב…');
+    setTimeout(() => showSequence(), 600);
+  }, 900);
+}
+
+// ══════════════════════════════════════════
+//  UI helpers
+// ══════════════════════════════════════════
+function setDim(on) {
+  [0,1,2,3].forEach(i => {
+    const t = document.getElementById('tile-' + i);
+    if (on) t.classList.add('dim');
+    else t.classList.remove('dim');
+  });
+}
+
+function setStatus(msg) {
+  document.getElementById('status').textContent = msg;
+}
+
+function hideOverlay() {
+  const o = document.getElementById('overlay');
+  o.classList.add('hidden');
+  setTimeout(() => o.style.display = 'none', 400);
+}
+
+// ══════════════════════════════════════════
+//  Mobile touch support
+// ══════════════════════════════════════════
+// Attach touchstart listeners to tiles so tap response is instant on mobile
+[0,1,2,3].forEach(i => {
+  const tile = document.getElementById('tile-' + i);
+  tile.addEventListener('touchstart', function(e) {
+    e.preventDefault(); // prevents 300ms delay and ghost clicks
+    handleTap(i);
+  }, { passive: false });
+});
+
+// ══════════════════════════════════════════
+//  Init
+// ══════════════════════════════════════════
+document.getElementById('main-btn').textContent = 'התחל ✨';
+document.getElementById('main-btn').disabled = false;
+document.getElementById('main-btn').onclick = startGame;
+</script>
+</body>
+</html>
